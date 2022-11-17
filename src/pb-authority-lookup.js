@@ -1,3 +1,4 @@
+/* eslint no-param-reassign: ["error", { "props": false }] */
 import { LitElement, html, css } from 'lit-element';
 import { unsafeHTML } from 'lit-html/directives/unsafe-html.js';
 import { pbMixin } from './pb-mixin.js';
@@ -182,6 +183,7 @@ export class PbAuthorityLookup extends pbMixin(LitElement) {
           if (response.ok) {
             return response.json();
           }
+          throw new Error(`Status code error : ${response.status}`)
         })
         .then(json => {
           items.forEach((item) => {
@@ -205,7 +207,8 @@ export class PbAuthorityLookup extends pbMixin(LitElement) {
             return d;
           });
           resolve(items);
-        });
+        })
+        .catch(err=> console.log(err));
       });
   }
 

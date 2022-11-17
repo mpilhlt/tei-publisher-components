@@ -1,4 +1,5 @@
 /* eslint-disable class-methods-use-this */
+/* eslint no-param-reassign: ["error", { "props": false }] */
 
 /**
  * Abstract base class to be implemented by all connectors.

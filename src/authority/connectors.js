@@ -5,6 +5,7 @@ import { GND } from './gnd.js';
 import { KBGA } from './kbga.js';
 import { GF } from './gf.js';
 import { ReconciliationService } from './reconciliation.js';
+// eslint-disable-next-line import/no-cycle
 import { Custom } from './custom.js';
 
 export function createConnectors(endpoint, root) {

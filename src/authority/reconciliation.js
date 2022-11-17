@@ -1,11 +1,13 @@
 /* eslint-disable class-methods-use-this */
+/* eslint no-param-reassign: ["error", { "props": false }] */
 import { Registry } from './registry.js'
 
 // Todo:
+// - optionally, extract id 
 // - strings <- types
 // - use scheme#types in @type output?
-// - test with other providers, inside custom connector
-// - documentation
+// - test with other providers
+// - use inside custom connector
 
 async function getServiceManifest (endpoint) {
 	const response = await fetch(endpoint);
@@ -17,16 +19,17 @@ export class ReconciliationService extends Registry {
   constructor(configElem) {
     super(configElem)
     this.endpoint = configElem.getAttribute('endpoint');
+    this.extractExp = configElem.getAttribute('extractExp') ? new RegExp(configElem.getAttribute('extractExp'), 'g') : /^(.*)$/g ;
     this.debug = configElem.getAttribute('debug');
     getServiceManifest(this.endpoint).then((result) => {
       this.ORConfig = result;
       if (this.debug) {
         console.log(
-          'OpenReconcile connector for register \'%s\' at endpoint <%s>. Using config: %o',
+          'Reconciliation connector for register \'%s\' at endpoint <%s>. Using config: %o',
           this._register, this.endpoint, this.ORConfig
         );
       }
-    })
+    });
   }
 
   /**
@@ -66,19 +69,20 @@ export class ReconciliationService extends Registry {
               } else {
                 this.description = ""
               }
+              const expId = this.extractExp.exec(item.id)[1];
               const result = {
                   register: this._register,
-                  id: (this._prefix ? `${this._prefix}-${item.id}` : item.id),
+                  id: (this._prefix ? `${this._prefix}-${expId}` : expId),
                   label: item.name,
                   link: this.view,
                   details: this.description,
-                  provider: 'OpenReconcile'
+                  provider: this.ORConfig.name
               };
               results.push(result);
             });
             if (this.debug) {
               console.log(
-                  'OpenReconcile results: %o',
+                  'Reconciliation results: %o',
                   results
               );
             }

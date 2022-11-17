@@ -1,3 +1,4 @@
+/* eslint no-param-reassign: ["error", { "props": false }] */
 import { Registry } from './registry.js';
 // eslint-disable-next-line import/no-cycle
 import { createConnectors } from './connectors.js';
@@ -104,7 +105,7 @@ export class Custom extends Registry {
       }
     }
     if (!entry) {
-      return Promise.reject(`No record found for ID ${item.id}`);
+      return Promise.reject(new Error(`No record found for ID ${item.id}`));
     }
     return fetch(`${this._endpoint}/api/register/${this._register}/${encodeURIComponent(item.id)}`, {
       method: 'POST',
