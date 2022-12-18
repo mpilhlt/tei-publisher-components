@@ -1,3 +1,108 @@
+## [1.40.2](https://github.com/eeditiones/tei-publisher-components/compare/v1.40.1...v1.40.2) (2022-11-27)
+
+
+### Bug Fixes
+
+* **pb-load:** add option to silently ignore network errors ([3695b28](https://github.com/eeditiones/tei-publisher-components/commit/3695b282d13e1bb127ec411fbb359ddd394a72a3))
+
+## [1.40.1](https://github.com/eeditiones/tei-publisher-components/compare/v1.40.0...v1.40.1) (2022-11-26)
+
+
+### Bug Fixes
+
+* **pb-load:** fix errors if no-credentials option is set ([0bdb718](https://github.com/eeditiones/tei-publisher-components/commit/0bdb718cfd125f7e38d6f1a075209548f7093a7c))
+
+# [1.40.0](https://github.com/eeditiones/tei-publisher-components/compare/v1.39.0...v1.40.0) (2022-11-26)
+
+
+### Features
+
+* **pb-load:** refresh when url, start or userParams attribute is changed; add attribute 'no-credentials' to disable attempting a cross-site request ([6f55e85](https://github.com/eeditiones/tei-publisher-components/commit/6f55e8533360adfcdb9862d8f4eda871345564da))
+
+# [1.39.0](https://github.com/eeditiones/tei-publisher-components/compare/v1.38.7...v1.39.0) (2022-11-22)
+
+
+### Bug Fixes
+
+* **Dockerfile:** update to match TEI Publisher master with newer roaster ([2ca4d37](https://github.com/eeditiones/tei-publisher-components/commit/2ca4d37a56df8054d1f29446163e694cba69e73f))
+* **pb-page:** don't send pb-page-ready until both: i18n language and api version are correctly reported ([41c02cd](https://github.com/eeditiones/tei-publisher-components/commit/41c02cd4e0cec066901c0bdf47790ad610143e59))
+
+
+### Features
+
+* **pb-code-highlight:** allow theme to be set via CSS variable; load CSS only once ([6d4e2fe](https://github.com/eeditiones/tei-publisher-components/commit/6d4e2fe51664b8325de75b785bf5026336239697))
+
+## [1.38.7](https://github.com/eeditiones/tei-publisher-components/compare/v1.38.6...v1.38.7) (2022-11-01)
+
+
+### Bug Fixes
+
+* globally disable automatic loading of Roboto font ([64b393b](https://github.com/eeditiones/tei-publisher-components/commit/64b393b057420506ec79a509e2d392efbd814c94))
+
+## [1.38.6](https://github.com/eeditiones/tei-publisher-components/compare/v1.38.5...v1.38.6) (2022-10-13)
+
+
+### Bug Fixes
+
+* **pb-formula:** Fix font loading issue for mathematical formulas ([b2d41ca](https://github.com/eeditiones/tei-publisher-components/commit/b2d41cacf2aa86dfe9ea10060ebaa0ef190fd0fe))
+
+## [1.38.5](https://github.com/eeditiones/tei-publisher-components/compare/v1.38.4...v1.38.5) (2022-08-26)
+
+
+### Bug Fixes
+
+* **pb-grid:** fix panel restore when using RTL; state not preserved when changing panel view ([78c18f6](https://github.com/eeditiones/tei-publisher-components/commit/78c18f64eb3cb5a4215b464ce9d3a89ff1051819))
+
+## [1.38.4](https://github.com/eeditiones/tei-publisher-components/compare/v1.38.3...v1.38.4) (2022-07-23)
+
+
+### Bug Fixes
+
+* **pb-view:** trigger two column view mode only if there are at least two cb ([0402c50](https://github.com/eeditiones/tei-publisher-components/commit/0402c507b7f4721544707e7214c8bf57233418a7))
+
+## [1.38.3](https://github.com/eeditiones/tei-publisher-components/compare/v1.38.2...v1.38.3) (2022-07-22)
+
+
+### Bug Fixes
+
+* **pb-leaflet-map:** omit extra slash from CSS path to avoid issues with CDN ([5dde12a](https://github.com/eeditiones/tei-publisher-components/commit/5dde12a38f8765bd198512937e306f07988e5b19))
+
+## [1.38.2](https://github.com/eeditiones/tei-publisher-components/compare/v1.38.1...v1.38.2) (2022-07-19)
+
+
+### Bug Fixes
+
+* **pb-authority-lookup, kbga, gf:** add 'limit' parameter to control how many entries are shown when searching the authority ([213fb91](https://github.com/eeditiones/tei-publisher-components/commit/213fb91d7f7e3797724df8e8d0fd4e3fe82a0bf5))
+
+## [1.38.1](https://github.com/eeditiones/tei-publisher-components/compare/v1.38.0...v1.38.1) (2022-06-21)
+
+
+### Bug Fixes
+
+* **pb-leaflet-map:** copy demo marker icons to build ([4f91fe1](https://github.com/eeditiones/tei-publisher-components/commit/4f91fe19369e72cb9c7daf72e131af5e8bf944b5))
+
+# [1.38.0](https://github.com/eeditiones/tei-publisher-components/compare/v1.37.0...v1.38.0) (2022-06-21)
+
+
+### Features
+
+* **pb-leaflet-map:** allow map marker icons to be configured via nested pb-map-icon elements ([45b6045](https://github.com/eeditiones/tei-publisher-components/commit/45b604514caaf2447d9eaf4172bcd6389cb53bcc))
+
+# [1.37.0](https://github.com/eeditiones/tei-publisher-components/compare/v1.36.3...v1.37.0) (2022-06-10)
+
+
+### Bug Fixes
+
+* **pb-combo-box:** also rename events ([0ef89fe](https://github.com/eeditiones/tei-publisher-components/commit/0ef89fe3850326abb5a97f12312ad236bbb13938))
+* **pb-popover:** typo in docs ([d81742e](https://github.com/eeditiones/tei-publisher-components/commit/d81742e1c09b0492281007fd2330f0df78b48282))
+
+
+### Features
+
+* **pb-multi-select:** emit blur and change events ([81d1cae](https://github.com/eeditiones/tei-publisher-components/commit/81d1cae18de69d2859953df0ca54a410852b29de))
+* **pb-multi-select:** new select component with autocomplete ([d86c488](https://github.com/eeditiones/tei-publisher-components/commit/d86c4889649e28e2fd0b28ac22d9de040601c7d6))
+* **pb-page:** emit pb-page-loaded once when slotted elements are ready ([639ad14](https://github.com/eeditiones/tei-publisher-components/commit/639ad14d2a81f15959d99d14c6f213dda00d5f67))
+
 ## [1.36.3](https://github.com/eeditiones/tei-publisher-components/compare/v1.36.2...v1.36.3) (2022-04-06)
 
 

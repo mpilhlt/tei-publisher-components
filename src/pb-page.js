@@ -174,6 +174,8 @@ class PbPage extends pbMixin(LitElement) {
             return;
         }
 
+        this.endpoint = this.endpoint.replace(/\/+$/, '');
+        
         if (this.locales && this._localeFallbacks.indexOf('app') === -1) {
             this._localeFallbacks.push('app');
         }
@@ -202,7 +204,12 @@ class PbPage extends pbMixin(LitElement) {
                 return fetch(`${this.endpoint}/api/version`)
                     .then((res2) => res2.json());
             })
-            .catch(() => null)
+            .catch((error) => {
+                if (error.response.status === 404) {
+                    return fetch(`${this.endpoint}/api/version`)
+                        .then((res2) => res2.json());
+                }
+            });
             
             if (json) {
                 this.apiVersion = json.api;
@@ -219,6 +226,13 @@ class PbPage extends pbMixin(LitElement) {
                 template: this.template,
                 apiVersion: this.apiVersion
             });
+        } else if (this._i18nInstance) {
+            this.signalReady('pb-page-ready', {
+                endpoint: this.endpoint,
+                apiVersion: this.apiVersion,
+                template: this.template,
+                language: this._i18nInstance.language
+            });
         }
     }
 
@@ -228,6 +242,15 @@ class PbPage extends pbMixin(LitElement) {
         if (this.disabled) {
             return;
         }
+
+        const slot = this.shadowRoot.querySelector('slot');
+        slot.addEventListener('slotchange', () => {
+            const ev = new CustomEvent('pb-page-loaded', {
+                bubbles: true,
+                composed: true
+            });
+            this.dispatchEvent(ev);
+        }, { once: true });
 
         const defaultLocales = resolveURL('../i18n/') + '{{ns}}/{{lng}}.json';
         console.log('<pb-page> Loading locales. common: %s; additional: %s; namespaces: %o',
@@ -278,7 +301,7 @@ class PbPage extends pbMixin(LitElement) {
             // initialized and ready to go!
             this._updateI18n(t);
             this.signalReady('pb-i18n-update', { t, language: this._i18nInstance.language });
-            if (this.requireLanguage) {
+            if (this.requireLanguage && this.apiVersion) {
                 this.signalReady('pb-page-ready', {
                     endpoint: this.endpoint,
                     apiVersion: this.apiVersion,

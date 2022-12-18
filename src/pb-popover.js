@@ -1,6 +1,7 @@
 import { LitElement, html, css } from 'lit-element';
 import tippy from 'tippy.js';
 import { pbMixin } from './pb-mixin.js';
+import { getCSSProperty } from "./utils.js";
 import * as themes from './pb-popover-themes.js';
 
 function _injectStylesheet(root, name, cssCode) {
@@ -74,7 +75,7 @@ export function loadTippyStyles(root, theme) {
  * unless defined otherwise; clicking anywhere on the page will close the popup.
  * @prop {"click" | "mouseenter" | "focus" | "focusin"} trigger - Defines one or more actions (space separated) which should cause
  * the popover to show. If property `persistent` is set, `trigger` will by default be set to `click`.
- * @prop {String} poupClass - Additional class names which will be added to the popup element.
+ * @prop {String} popupClass - Additional class names which will be added to the popup element.
  * Use this to apply a specific style to certain popovers, but not others.
  * @prop {String} remote - An optional URL to asynchronously load the popover's content from. Content will
  * be loaded after the popover is displayed. The downloaded HTML content will replace the text set via the alternate slot.
@@ -161,32 +162,20 @@ export class PbPopover extends pbMixin(LitElement) {
 
     _checkCSSProperties() {
         if (!this.theme && this.theme !== 'none') {
-            this.theme = this._getCSSProperty('--pb-popover-theme', 'none');
+            this.theme = getCSSProperty(this, '--pb-popover-theme', 'none');
         }
         if (!this.placement) {
-            this.placement = this._getCSSProperty('--pb-popover-placement', 'auto');
+            this.placement = getCSSProperty(this, '--pb-popover-placement', 'auto');
         }
         if (!this.fallbackPlacement) {
-            this.fallbackPlacement = this._getCSSProperty('--pb-popover-fallback-placement', null);
+            this.fallbackPlacement = getCSSProperty(this, '--pb-popover-fallback-placement', null);
         }
         if (!this.persistent) {
-            this.persistent = this._getCSSProperty('--pb-popover-persistent', false);
+            this.persistent = getCSSProperty(this, '--pb-popover-persistent', false);
         }
         if (!this.trigger) {
-            this.trigger = this._getCSSProperty('--pb-popover-trigger', null);
+            this.trigger = getCSSProperty(this, '--pb-popover-trigger', null);
         }
-    }
-
-    _getCSSProperty(name, defaultValue) {
-        const property = getComputedStyle(this).getPropertyValue(name);
-        if (property) {
-            try {
-                return JSON.parse(property);
-            } catch (e) {
-                return defaultValue;
-            }
-        }
-        return defaultValue;
     }
 
     _injectStyles() {
