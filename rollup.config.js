@@ -8,12 +8,12 @@ import pkg from "./package.json";
 
 const production = process.env.BUILD === 'production';
 
-const wcloader = '<script src="https://unpkg.com/@webcomponents/webcomponentsjs@2.4.3/webcomponents-loader.js"></script>';
+const wcloader = '<script src="https://cdn.jsdelivr.net/npm/@webcomponents/webcomponentsjs/webcomponents-loader.js"></script>';
 const pbbundle = '<script type="module" src="../pb-components-bundle.js"></script>';
 
 function replaceDemo(input, scripts) {
     const output = input.toString().replace(/<!--scripts-->.*\/scripts-->/sg, scripts);
-    return output.replace(/endpoint=".*"/g, 'endpoint="https://teipublisher.com/exist/apps/tei-publisher"');
+    return output.replace(/endpoint=".*?"/g, 'endpoint="https://teipublisher.com/exist/apps/tei-publisher" api-version="1.0.0"');
 }
 
 export default [
@@ -23,7 +23,8 @@ export default [
             'src/pb-components-bundle.js',
             'src/pb-leaflet-map.js',
             'src/pb-odd-editor.js',
-            'src/pb-edit-app.js'
+            'src/pb-edit-app.js',
+            'src/pb-code-editor.js'
         ],
         output: {
             dir: 'dist',
@@ -66,21 +67,17 @@ export default [
                         src: './node_modules/leaflet/dist/images/*',
                         dest: './images/leaflet'
                     },
-                    {
-                        src: './node_modules/openseadragon/build/openseadragon/openseadragon.min.js',
-                        dest: './lib'
-                    },
-                    {
-                        src: './node_modules/openseadragon/build/openseadragon/images/*',
-                        dest: './images/openseadragon'
-                    },
+                    // {
+                    //     src: './node_modules/openseadragon/build/openseadragon/openseadragon.min.js',
+                    //     dest: './lib'
+                    // },
+                    // {
+                    //     src: './node_modules/openseadragon/build/openseadragon/images/*',
+                    //     dest: './images/openseadragon'
+                    // },
                     {
                         src: './node_modules/prismjs/themes/*',
                         dest: './css/prismjs'
-                    },
-                    {
-                        src: './node_modules/codemirror/theme/*',
-                        dest: './css/codemirror'
                     },
                     {
                         src: './node_modules/leaflet/dist/leaflet-src.js',
@@ -101,6 +98,18 @@ export default [
                     {
                         src: './node_modules/tom-select/dist/css/*.min.css',
                         dest: './css/tom-select'
+                    },
+                    {
+                        src: './src/assets/pagedjs/*.css',
+                        dest: './css/pagedjs'
+                    },
+                    {
+                        src: './node_modules/pagedjs/dist/paged.polyfill.js',
+                        dest: 'lib'
+                    },
+                    {
+                        src: './src/assets/components.css',
+                        dest: 'css'
                     }
                 ]
             })
@@ -123,7 +132,7 @@ export default [
             copy({
                 targets: [
                     {
-                        src: ['demo/*.html', '!**/pb-odd-editor.html', '!**/pb-leaflet-map*.html'],
+                        src: ['demo/*.html', '!**/pb-odd-editor.html', '!**/pb-leaflet-map*.html', '!**/pb-code-editor.html'],
                         dest: 'dist/demo',
                         transform: (contents) => replaceDemo(contents, `${wcloader}${pbbundle}`)
                     },
@@ -138,6 +147,12 @@ export default [
                         dest: 'dist/demo',
                         transform: (contents) =>
                             replaceDemo(contents, `${wcloader}${pbbundle}<script type="module" src="../pb-leaflet-map.js"></script>`)
+                    },
+                    {
+                        src: ['demo/pb-code-editor.html'],
+                        dest: 'dist/demo',
+                        transform: (contents) =>
+                            replaceDemo(contents, `${wcloader}${pbbundle}<script type="module" src="../pb-code-editor.js"></script>`)
                     },
                     {
                         src: 'api.html',

@@ -47,6 +47,9 @@
   "browse": {
     "description": "Use this app to experiment and try out various ODDs containing processing model instructions. Upload your own files and create a custom ODD.",
     "login": "to upload files or see administrative functions (default user: 'tei-demo', password: 'demo').",
+    "login-1": "Log in as ",
+    "login-2": "with password",
+    "login-3": "to experiment with your own files and ODDs",
     "sort": "Sort by",
     "filter": "Filter by",
     "filterPlaceholder": "Filter",
@@ -60,6 +63,9 @@
     "confirmDeletion": "Are you sure you want to delete the file?",
     "confirmDeletion_plural": "Are you sure you want to delete {{count}} files?",
     "documents": "Documents",
+    "documents-removed":"Removed documents",
+    "document-not-found":"Document not found",
+    "document-remove-failed":"Failed to remove document",
     "collections": "Local Collection",
     "dts": "Distributed Text Services (Experimental)",
     "test": {
@@ -77,6 +83,10 @@
     "markdown": {
       "title": "Markdown Sample",
       "description": "An example of using markdown for static content."
+    },
+    "annotate": {
+      "title": "Annotation Samples",
+      "description": "Another playground for annotating documents."
     },
     "up": "Go to parent"
   },
@@ -111,11 +121,15 @@
     "reset": "Reset",
     "placeholder": "Enter Query",
     "sections": "Search sections",
-    "headings": "Search headings"
+    "headings": "Search headings",
+    "title": "Search titles",
+    "content": "Search content",
+    "scope": "Query scope"
   },
   "dts": {
     "endpoint": "Select Endpoint",
-    "note": "Experimental: access other editions which expose the DTS API"
+    "note": "Experimental: access other editions which expose the DTS API",
+    "requires-login":"Requires login"
   },
   "odd": {
     "files": "ODD Files",
@@ -172,7 +186,10 @@
   "facets": {
     "show": "Show top 50",
     "genre": "Genre",
-    "language": "Language"
+    "language": "Language",
+    "feature": "Feature",
+    "form": "Form",
+    "period": "Period"
   },
   "appgen": {
     "account": {

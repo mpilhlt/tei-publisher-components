@@ -5,8 +5,10 @@ import XHR from 'i18next-xhr-backend';
 import Backend from 'i18next-chained-backend';
 import { pbMixin, clearPageEvents } from './pb-mixin.js';
 import { resolveURL } from './utils.js';
+import { loadStylesheets } from "./theming.js";
 import { initTranslation } from "./pb-i18n.js";
 import { typesetMath } from "./pb-formula.js";
+import { registry } from "./urls.js";
 
 /**
  * Make sure there's only one instance of pb-page active at any time.
@@ -25,7 +27,7 @@ let _instance;
  * @fires pb-i18n-language - when received, changes the language to the one passed in the event and proceeds to pb-i18-update
  * @fires pb-toggle - when received, dispatch state changes to the elements on the page (see `pb-toggle-feature`, `pb-select-feature`)
  */
-class PbPage extends pbMixin(LitElement) {
+export class PbPage extends pbMixin(LitElement) {
 
     static get properties() {
         return {
@@ -36,6 +38,24 @@ class PbPage extends pbMixin(LitElement) {
             appRoot: {
                 type: String,
                 attribute: 'app-root'
+            },
+            /**
+             * Is the resource path part of the URL or should it be
+             * encoded as a parameter? TEI Publisher uses the
+             * URL path, but the webcomponent demos need to encode the resource path
+             * in a query parameter.
+             */
+            urlPath: {
+                type: String,
+                attribute: 'url-path'
+            },
+            /**
+             * If enabled, a hash in the URL (e.g. documentation.xml#introduction) will
+             * be interpreted as an xml:id to navigate to when talking to the server.
+             */
+            idHash: {
+                type: Boolean,
+                attribute: 'id-hash'
             },
             /**
              * TEI Publisher internal: set to the current page template.
@@ -130,6 +150,9 @@ class PbPage extends pbMixin(LitElement) {
             unresolved: {
                 type: Boolean,
                 reflect: true
+            },
+            theme: {
+                type: String
             }
         };
     }
@@ -138,8 +161,11 @@ class PbPage extends pbMixin(LitElement) {
         super();
         this.unresolved = true;
         this.endpoint = ".";
+        this.urlPath = 'path';
+        this.idHash = false;
         this.apiVersion = undefined;
         this.requireLanguage = false;
+        this.theme = null;
         this._localeFallbacks = [];
         this._i18nInstance = null;
 
@@ -174,6 +200,8 @@ class PbPage extends pbMixin(LitElement) {
             return;
         }
 
+        registry.configure(this.urlPath === 'path', this.idHash, this.appRoot);
+
         this.endpoint = this.endpoint.replace(/\/+$/, '');
         
         if (this.locales && this._localeFallbacks.indexOf('app') === -1) {
@@ -181,15 +209,24 @@ class PbPage extends pbMixin(LitElement) {
         }
         this._localeFallbacks.push('common');
 
-        const target = this.getParameter('_target');
+        const target = registry.state._target;
         if (target) {
             this.endpoint = target;
         }
 
-        const apiVersion = this.getParameter('_api');
+        const apiVersion = registry.state._api;
         if (apiVersion) {
             this.apiVersion = apiVersion;
         }
+
+        const stylesheetURLs = [
+            resolveURL('../css/components.css')
+        ];
+        if (this.theme) {
+            stylesheetURLs.push(this.toAbsoluteURL(this.theme, this.endpoint));
+        }
+        console.log('<pb-page> Loading component theme stylesheets from %s', stylesheetURLs.join(', '));
+        this._themeSheet = await loadStylesheets(stylesheetURLs);
 
         // try to figure out what version of TEI Publisher the server is running
         if (!this.apiVersion) {
@@ -204,12 +241,9 @@ class PbPage extends pbMixin(LitElement) {
                 return fetch(`${this.endpoint}/api/version`)
                     .then((res2) => res2.json());
             })
-            .catch((error) => {
-                if (error.response.status === 404) {
-                    return fetch(`${this.endpoint}/api/version`)
-                        .then((res2) => res2.json());
-                }
-            });
+            .catch(() => fetch(`${this.endpoint}/api/version`)
+                    .then((res2) => res2.json())
+            );
             
             if (json) {
                 this.apiVersion = json.api;
@@ -314,14 +348,14 @@ class PbPage extends pbMixin(LitElement) {
         this.subscribeTo('pb-i18n-language', ev => {
             const { language } = ev.detail;
             this._i18nInstance.changeLanguage(language).then(t => {
-            this._updateI18n(t);
-            this.emitTo('pb-i18n-update', { t, language: this._i18nInstance.language }, []);
+                this._updateI18n(t);
+                this.emitTo('pb-i18n-update', { t, language: this._i18nInstance.language }, []);
             }, []);
         });
 
 
-        this.subscribeTo('pb-toggle', this._toggleFeatures.bind(this));
-
+        // this.subscribeTo('pb-global-toggle', this._toggleFeatures.bind(this));
+        this.addEventListener('pb-global-toggle', this._toggleFeatures.bind(this));
         this.unresolved = false;
 
         console.log('<pb-page> endpoint: %s; trigger window resize', this.endpoint);
@@ -347,26 +381,27 @@ class PbPage extends pbMixin(LitElement) {
         });
     }
 
+    get stylesheet() {
+        return this._themeSheet;
+    }
+
     /**
      * Handle the `pb-toggle` event sent by `pb-select-feature` or `pb-toggle-feature`
      * and dispatch actions to the elements on the page.
      */
     _toggleFeatures(ev) {
-        if (ev.detail.selectors) {
-            ev.detail.selectors.forEach(sc => {
-                this.querySelectorAll(sc.selector).forEach(node => {
-                    const command = sc.command || 'toggle';
-                    if (node.command) {
-                        node.command(command, sc.state);
-                    }
-                    if (sc.state) {
-                        node.classList.add(command);
-                    } else {
-                        node.classList.remove(command);
-                    }
-                });
-            });
-        }
+        const sc = ev.detail;
+        this.querySelectorAll(sc.selector).forEach(node => {
+            const command = sc.command || 'toggle';
+            if (node.command) {
+                node.command(command, sc.state);
+            }
+            if (sc.state) {
+                node.classList.add(command);
+            } else {
+                node.classList.remove(command);
+            }
+        });
     }
 
     render() {

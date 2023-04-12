@@ -1,5 +1,6 @@
-import { LitElement, html, css } from 'lit-element';
-import { pbMixin } from './pb-mixin.js';
+import {LitElement, html, css} from 'lit-element';
+import {pbMixin} from './pb-mixin.js';
+import {themableMixin} from "./theming.js";
 import '@polymer/iron-icon';
 import '@polymer/iron-icons';
 import '@polymer/iron-collapse';
@@ -9,7 +10,7 @@ import '@polymer/iron-collapse';
  * A collapsible block: in collapsed state it only shows a header and expands if clicked.
  * The header should go into slot `collapse-trigger`, the content into `collapse-content`.
  * Example:
- * 
+ *
  * ```html
  * <pb-collapse>
  *   <div slot="collapse-trigger">
@@ -19,12 +20,17 @@ import '@polymer/iron-collapse';
  * </pb-collapse>
  * ```
  *
+ * By adding a CSS 'icon-right' to a `pb-collapse` the icon can be placed on the right side
+ * ```
+ * <pb-collapse class='icon-right'>
+ * ```
+ *
  * @slot collapse-trigger - trigger toggling collapsed content on/off
  * @slot collapse-content - content to be collapsed
  * @cssprop [--pb-collapse-icon-padding=0 4px 0 0] - padding in px for the "caret-down" icon left to the collapsible item
  * @fires pb-collapse-open - Fires opening the collapsed section
  */
-export class PbCollapse extends pbMixin(LitElement) {
+export class PbCollapse extends themableMixin(pbMixin(LitElement)) {
     static get properties() {
         return {
             ...super.properties,
@@ -113,8 +119,8 @@ export class PbCollapse extends pbMixin(LitElement) {
     }
 
     /**
-             * opens the collapsible section
-             */
+     * opens the collapsible section
+     */
     open() {
         if (this.opened) {
             return;
@@ -147,10 +153,10 @@ export class PbCollapse extends pbMixin(LitElement) {
         return html`
             <div id="trigger" @click="${this.toggle}" class="collapse-trigger">
                 ${
-            !this.noIcons ?
+                    !this.noIcons ?
                 html`<iron-icon icon="${this.opened ? this.collapseIcon : this.expandIcon}"></iron-icon>` :
-                null
-            }
+                        null
+                }
                 <slot id="collapseTrigger" name="collapse-trigger"></slot>
             </div>
             <iron-collapse id="collapse" horizontal="${this.horizontal}" no-animation="${this.noAnimation}" .opened="${this.opened}">
@@ -163,21 +169,26 @@ export class PbCollapse extends pbMixin(LitElement) {
         return css`
             :host {
                 display: block;
+                position: relative;
             }
 
             #trigger {
-                display: table-row;
+                display: flex;
+                align-items:center
             }
 
-            #trigger iron-icon {
-                display: table-cell;
+            iron-icon {
                 padding: var(--pb-collapse-icon-padding, 0 4px 0 0);
             }
 
-            slot[name="collapse-trigger"] {
-                display: table-cell;
+            :host(.icon-right) iron-icon {
+                position: absolute;
+                right: 0;
             }
+
         `;
     }
 }
-customElements.define('pb-collapse', PbCollapse);
+if (!customElements.get('pb-collapse')) {
+    customElements.define('pb-collapse', PbCollapse);
+}

@@ -10,7 +10,9 @@ import { translate } from "./pb-i18n.js";
  * which should cause the connected `pb-load` element to refresh.
  *
  * @fires pb-load - Fires when user selects new page to show
+ * @fires pb-paginate - Fires when user selects new page to show
  * @fires pb-results-received - When received, recalculates page ranges to display according to the parameters received
+ * @csspart count - the span displaying the number of items
  */
 export class PbPaginate extends pbMixin(LitElement) {
     static get properties() {
@@ -97,7 +99,7 @@ export class PbPaginate extends pbMixin(LitElement) {
             ${this.pages.map((item, index) => html`<span class="${item.class}" @click="${() => this._handleClick(item, index)}">${item.label}</span>`)}
             <span @click="${this._handleLast}"><iron-icon icon="last-page"></iron-icon></span>
 
-            <span class="found">${translate(this.foundLabel, { count: this.total })}</span>
+            <span class="found" part="count">${translate(this.foundLabel, { count: this.total })}</span>
         `;
     }
 
@@ -168,35 +170,40 @@ export class PbPaginate extends pbMixin(LitElement) {
 
     _handleClick(item, index) {
         this.start = (this.pages[index].label - 1) * this.perPage + 1;
-        this.emitTo('pb-load', {
-            "params": {
-                "start": this.start,
-                "per-page": this.perPage,
-                "page": index
-            }
+        ['pb-load', 'pb-paginate'].forEach((ev) => {
+            this.emitTo(ev, {
+                "params": {
+                    "start": this.start,
+                    "per-page": this.perPage,
+                    "page": index
+                }
+            });
         });
     }
 
     _handleFirst(ev) {
         this.start = 1;
-        this.emitTo('pb-load', {
-            "params": {
-                "start": 1,
-                "per-page": this.perPage,
-                "page": 0
-            }
+        ['pb-load', 'pb-paginate'].forEach((event) => {
+            this.emitTo(event, {
+                "params": {
+                    "start": 1,
+                    "per-page": this.perPage,
+                    "page": 0
+                }
+            });
         });
     }
 
     _handleLast(ev) {
         this.start = (this.pageCount - 1) * this.perPage + 1;
-
-        this.emitTo('pb-load', {
-            "params": {
-                "start": this.start,
-                "per-page": this.perPage,
-                "page": this.pageCount - 1
-            }
+        ['pb-load', 'pb-paginate'].forEach((event) => {
+            this.emitTo(event, {
+                "params": {
+                    "start": this.start,
+                    "per-page": this.perPage,
+                    "page": this.pageCount - 1
+                }
+            });
         });
     }
 }

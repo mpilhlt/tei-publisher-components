@@ -1,5 +1,6 @@
 import { LitElement } from 'lit-element';
-import { pbMixin } from './pb-mixin';
+import { pbMixin } from './pb-mixin.js';
+import { registry } from "./urls.js";
 
 /**
  * Represents a Publisher document. It has no visual presentation but holds meta-data
@@ -52,6 +53,10 @@ class PbDocument extends pbMixin(LitElement) {
                 type: String,
                 reflect: true
             },
+            disableHistory: {
+                type: Boolean,
+                attribute: 'disable-history'
+            },
             sourceView: {
                 type: String,
                 attribute: 'source-view'
@@ -61,12 +66,22 @@ class PbDocument extends pbMixin(LitElement) {
 
     constructor() {
         super();
-        this.path = '';
+        this.path = null;
         this.rootPath = '';
+        this.disableHistory = false;
     }
 
     connectedCallback() {
         super.connectedCallback();
+
+        if (!this.disableHistory) {
+            // if path is unset, use path taken from the URL
+            if (registry.state.path && !this.path) {
+                this.path = registry.state.path;
+            }
+            this.view = registry.state.view || this.view;
+            this.odd = registry.state.odd || this.odd;
+        }
     }
 
     attributeChangedCallback(name, oldVal, newVal) {
@@ -84,6 +99,10 @@ class PbDocument extends pbMixin(LitElement) {
      */
     getFileName() {
         return this.path.replace(/^.*?([^\/]+)$/, '$1');
+    }
+
+    getCollection() {
+        return this.path.replace(/^(.*?)\/[^\/]+$/, '$1');
     }
 
     /**
