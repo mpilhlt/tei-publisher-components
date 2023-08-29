@@ -93,8 +93,24 @@ export class PbCustomForm extends PbLoad {
         this.shadowRoot.getElementById('ironform').reset();
     }
     
+    /**
+     * serialize custom form to object with name value pairs
+     * empty, unselected and undifined inputs will be returned
+     * as null while disabled elements will still be omitted
+     * this allows url parameters to be reset in the URL
+     * as IronForm.serializeform will omit names without a value
+     * @returns {Object} name value pairs
+     */
     serializeForm() {
-        return this.shadowRoot.getElementById('ironform').serializeForm();
+        const elements = this.shadowRoot.getElementById('ironform')._getSubmittableElements()
+        const initial = {}
+        for (const element of elements) {
+            initial[element.name] = null;
+        }
+        return Object.assign(
+            initial,
+            this.shadowRoot.getElementById('ironform').serializeForm()
+        );
     }
 
     _parseHeaders(xhr) {
@@ -131,7 +147,7 @@ export class PbCustomForm extends PbLoad {
     static get properties() {
         return {
             /**
-             * Register event handlers on all inputs and submit the form
+             * Register event handlers on all descendant elements matching the given CSS selector and submit the form
              * automatically if any of those changes. For button-like controls,
              * a submit is triggered on click, for text input on keyUp, and for
              * all other form components on change.
