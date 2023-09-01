@@ -1,6 +1,6 @@
 /* eslint-disable class-methods-use-this */
-import { semver } from 'semver'
-import { Registry } from './registry.js'
+import * as semver from "semver";
+import { Registry } from './registry.js';
 
 // TODO:
 // - be more robust with differences between API versions
