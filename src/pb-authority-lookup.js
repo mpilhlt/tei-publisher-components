@@ -145,6 +145,8 @@ export class PbAuthorityLookup extends pbMixin(LitElement) {
       properties: {
         ref: item.id,
         ...(item.label) && { key: item.label}
+        ...(item.type) && { type: item.type}
+        ...(item.details) && { details: item.details}
       }
     };
     this.emitTo('pb-authority-select', options);
