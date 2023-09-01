@@ -144,8 +144,8 @@ export class PbAuthorityLookup extends pbMixin(LitElement) {
       strings: item.strings,
       properties: {
         ref: item.id,
-        ...(item.label) && { key: item.label}
-        ...(item.type) && { type: item.type}
+        ...(item.label) && { key: item.label},
+        ...(item.type) && { type: item.type},
         ...(item.details) && { details: item.details}
       }
     };
