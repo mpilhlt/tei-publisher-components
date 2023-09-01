@@ -1,3 +1,32 @@
+## [2.12.6](https://github.com/eeditiones/tei-publisher-components/compare/v2.12.5...v2.12.6) (2023-09-01)
+
+
+### Bug Fixes
+
+* **pb-link:** support parameters 'xpath' to be passed to connected pb-view ([56f50e9](https://github.com/eeditiones/tei-publisher-components/commit/56f50e912fc5eb83027638a31e2660d0ca06a803))
+* **pb-split-list:** prevent commit after popstate to avoid messing up history ([c817eb8](https://github.com/eeditiones/tei-publisher-components/commit/c817eb8187cb71123c10d17953f29a3c2c1bce4e))
+
+## [2.12.5](https://github.com/eeditiones/tei-publisher-components/compare/v2.12.4...v2.12.5) (2023-08-31)
+
+
+### Bug Fixes
+
+* **pb-facsimile:** openseadragon.min.js should not be removed by npm clean ([9ccdfb6](https://github.com/eeditiones/tei-publisher-components/commit/9ccdfb6158c152359d96b4fb82edfd0170b2fb2c))
+
+## [2.12.4](https://github.com/eeditiones/tei-publisher-components/compare/v2.12.3...v2.12.4) (2023-08-31)
+
+
+### Bug Fixes
+
+* **pb-view:** initial load failed if on-update was set ([4876ffe](https://github.com/eeditiones/tei-publisher-components/commit/4876ffe55fbd680b0e70694e95f1c316516aba4a))
+
+## [2.12.3](https://github.com/eeditiones/tei-publisher-components/compare/v2.12.2...v2.12.3) (2023-08-31)
+
+
+### Bug Fixes
+
+* **pb-facsimile:** local version of openseadragon.min.js needs to stay ([4e958a1](https://github.com/eeditiones/tei-publisher-components/commit/4e958a19aa87e6be4cfc77cbab71bf102547699f))
+
 ## [2.12.2](https://github.com/eeditiones/tei-publisher-components/compare/v2.12.1...v2.12.2) (2023-08-28)
 
 
