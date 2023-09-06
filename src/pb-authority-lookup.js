@@ -185,6 +185,7 @@ export class PbAuthorityLookup extends pbMixin(LitElement) {
           if (response.ok) {
             return response.json();
           }
+          Promise.reject()
         })
         .then(json => {
           items.forEach((item) => {

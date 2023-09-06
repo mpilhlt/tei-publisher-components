@@ -88,9 +88,8 @@ function rangeToPoint(node, offset, position = 'start') {
       parent: container.getAttribute('data-tei'),
       offset: absoluteOffset(container, node, offset),
     };
-  } else {
-    console.error('No container with data-tei found for %o', node.parentNode);
   }
+  console.error('No container with data-tei found for %o', node.parentNode);
 }
 
 function ancestors(node, selector) {
@@ -448,7 +447,7 @@ class PbViewAnnotate extends PbView {
       return null;
     }
 
-    console.log('<pb-view-annotate> Range before adjust: %o %o', startPoint, endPoint);
+    // console.log('<pb-view-annotate> Range before adjust: %o %o', startPoint, endPoint);
     if (startPoint[1] === startPoint[0].textContent.length) {
       // try to find the next text node
       const nextNode = nextTextNode(context, startPoint[0]);
@@ -473,7 +472,7 @@ class PbViewAnnotate extends PbView {
       range.setEnd(endPoint[0], endPoint[1]);
     }
 
-    console.log('<pb-view-annotate> Range: %o', range);
+    // console.log('<pb-view-annotate> Range: %o', range);
     const span = document.createElement('span');
     const addClass = teiRange.properties[this.getKey(teiRange.type)] === '' ? 'incomplete' : '';
     span.className = `annotation annotation-${teiRange.type} ${teiRange.type} ${addClass}`;
@@ -546,7 +545,7 @@ class PbViewAnnotate extends PbView {
         }
       }
       this._currentSelection = range;
-      console.log('<pb-view-annotate> selection: %o', range);
+      // console.log('<pb-view-annotate> selection: %o', range);
 
       if (changed) {
         this._inHandler = true;
@@ -564,6 +563,7 @@ class PbViewAnnotate extends PbView {
   }
 
   updateAnnotation(teiRange, batch = false) {
+    // console.log('pb-view-annotate.js, function updateAnnotation. teiRange: %o', teiRange);
     teiRange = clearProperties(teiRange);
     const result = this._updateAnnotation(teiRange, batch);
     if (result) {
@@ -593,7 +593,7 @@ class PbViewAnnotate extends PbView {
     if (info.properties) {
       adjustedRange.properties = info.properties;
     }
-    console.log('<pb-view-annotate> range adjusted: %o', adjustedRange);
+    // console.log('<pb-view-annotate> range adjusted: %o', adjustedRange);
     this._ranges.push(clearProperties(adjustedRange));
     this.emitTo('pb-annotations-changed', {
       type: adjustedRange.type,
@@ -625,7 +625,7 @@ class PbViewAnnotate extends PbView {
       this._rangesMap.delete(span);
       const pos = this._ranges.indexOf(teiRange);
 
-      console.log('<pb-view-annotate> deleting annotation %o', teiRange);
+      // console.log('<pb-view-annotate> deleting annotation %o', teiRange);
 
       this._ranges.splice(pos, 1);
     }
@@ -657,6 +657,7 @@ class PbViewAnnotate extends PbView {
   }
 
   editAnnotation(span, properties) {
+    // console.log(`pb-view-annotate.js, function editAnnotation, span %o, data %o`, span, properties);
     if (span.dataset.type === 'edit') {
       let range = this._rangesMap.get(span);
       if (range) {
@@ -691,6 +692,7 @@ class PbViewAnnotate extends PbView {
   }
 
   _editAnnotation(ev) {
+    // console.log(`pb-view-annotate, function _editAnnotation, data %o`, ev);
     this.editAnnotation(ev.detail.target, ev.detail.properties);
   }
 
@@ -907,7 +909,7 @@ class PbViewAnnotate extends PbView {
     const expr = tokens.filter(token => token && token.length > 0)
       .map(token => escape(token))
       .join('|');
-    console.log(`<pb-view-annotate> Searching content for ${expr}...`);
+    // console.log(`<pb-view-annotate> Searching content for ${expr}...`);
     const regex = new RegExp(expr, this.caseSensitive ? 'g' : 'gi');
     const walker = document.createTreeWalker(
       this.shadowRoot.getElementById('view'),

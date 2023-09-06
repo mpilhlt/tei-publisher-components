@@ -1,15 +1,15 @@
 /* eslint-disable class-methods-use-this */
-import * as semver from "semver";
+import { maxSatisfying, valid } from 'es-semver';
 import { Registry } from './registry.js';
 
 // TODO:
-// - be more robust with differences between API versions
-// - more fields reconc service <-> TEI Publisher
 // - strings <- types
 // - use scheme#types in @type output?
-// - test with other providers
-// - use/test inside custom connector
 // - documentation
+// - [?] test with other providers
+// - [?] test inside custom connector
+// - [√] be more robust with differences between API versions
+// - [√] more fields reconc service <-> TEI Publisher
 
 /**
  * Return a JSON object representing the reconciliation service manifest
@@ -32,7 +32,7 @@ async function getServiceManifest (endpoint) {
  */
 function queryObj(version, key) {
   switch (version) {
-    case '0.3-alpha':
+    case '0.3.0-alpha':
       return {
         queries: [{
           query: key
@@ -56,14 +56,14 @@ function queryObj(version, key) {
  */
 function qRequestInit(version, key) {
   switch (version) {
-    case '0.3-alpha':
+    case '0.3.0-alpha':
       return {
         method: 'POST',
         headers: {
           'Accept': 'application/json',
           'Content-Type': 'application/json'
         },
-        body: queryObj(version, key)
+        body: JSON.stringify(queryObj(version, key))
       };
     default:
       return {
@@ -87,8 +87,15 @@ export class ReconciliationService extends Registry {
     getServiceManifest(this.endpoint)
       .then((result) => {
         this.ReconcConfig = result;
+        if (this.ReconcConfig.versions) {
+          this.ReconcConfig.versions = this.ReconcConfig.versions.map((v) => {
+            if (!valid(v, {'loose': true, 'includePrerelease': true}) && valid(`${v}.0`, {'loose': true, 'includePrerelease': true})) { return `${v}.0`; }
+            if (!valid(v, {'loose': true, 'includePrerelease': true}) && valid(`${v.split('-')[0]}.0-${v.split('-')[1]}`, {'loose': true, 'includePrerelease': true})) { return `${v.split('-')[0]}.0-${v.split('-')[1]}`; }
+            return v;
+          });
+        }
         // check out the largest of the versions that the endpoint supports (that is not larger than what this client supports)
-        this.reconcVersion = !this.ReconcConfig.versions ? "0.1" : semver.maxSatisfying(this.ReconcConfig.versions, "<=0.2" );
+        this.reconcVersion = !(this.ReconcConfig.versions) ? '0.1.0' : maxSatisfying(this.ReconcConfig.versions, '<0.3.1', {'loose': true, 'includePrerelease': true});
         if (this.debug) {
           console.log(
             'Reconciliation connector for register \'%s\' at endpoint <%s> (v%s).',
@@ -97,7 +104,7 @@ export class ReconciliationService extends Registry {
           if (this.processLang || this.acceptLang) {
             console.log('Using processLang %s and acceptLang %s.', this.processLang, this.acceptLang );
           }
-          console.log('Using config: %o', this.ReconcConfig);
+          // console.log('Using config: %o', this.ReconcConfig);
         }
       })
   }
@@ -109,16 +116,17 @@ export class ReconciliationService extends Registry {
    * @returns {Promise}  - a promise
    */
   async query(key) {
+    // console.log(`Building request for "%s", (v%s)...`, key, this.reconcVersion)
     const qInit = qRequestInit(this.reconcVersion, key);
-    if (this.acceptLang && this.reconcVersion === '0.3-alpha') {
+    if (this.acceptLang && this.reconcVersion === '0.3.0-alpha') {
       qInit.headers["Accept-Language"] = this.acceptLang
     }
-    if (this.processLang && this.reconcVersion === '0.3-alpha') {
+    if (this.processLang && this.reconcVersion === '0.3.0-alpha') {
       qInit.body.queries[0].lang = this.processLang
     }
     return ( fetch(this.endpoint, qInit)
               .then((response) => response.json())
-              .then((json) => this._parseResponse(json))
+              .then((json) => this._parseResponse(this.reconcVersion, json))
            )
   }
 
@@ -185,17 +193,21 @@ export class ReconciliationService extends Registry {
   }
 
   /**
-   * Parse the response of a reconciliation service
+   * Parse the response of a reconciliation service and return an array of result objects
    *
-   * @param {String} version  - the requested reconciliation API version
-   * @param {Object} obj - the response to be parsed
-   * @returns {Object}   - a json object
+   * @param {String} version      - the requested reconciliation API version
+   * @param {Object} obj          - the response to be parsed
+   * @returns {Object[]} results  - an array of json objects (results)
    */
   _parseResponse(version, obj) {
     const results = [];
+    // obj = JSON.parse(obj);
     switch (version) {
-      case '0.3-alpha':
-        obj.results[0].candidates.forEach((item) => {
+      case '0.3.0-alpha':
+          // TODO: Fix if the service supports it or if the spec changes
+          //       (https://reconciliation-api.github.io/specs/draft/#dfn-reconciliation-result-batch)
+          // obj.results[0].candidates.forEach((item) => {
+          obj[0].result.forEach((item) => {
           if (this.ReconcConfig.view) {
             this.view = this.ReconcConfig.view.url.replace('{{id}}', item.id);
           } else {
@@ -221,10 +233,16 @@ export class ReconciliationService extends Registry {
           results.push(result);
         });
         if (this.debug) {
-          console.log('Reconciliation has %s results: %o', obj.results[0].candidates.length, results);
+          // TODO: Fix if the service supports it or if the spec changes
+          //       (https://reconciliation-api.github.io/specs/draft/#dfn-reconciliation-result-batch)
+          // console.log('Reconciliation has %s results: %o', obj.results[0].candidates.length, results);
+          console.log('Reconciliation has %s results: %o', obj[0].result.length, results);
         }
         return {
-          totalItems: obj.results[0].candidates.length,
+          // TODO: Fix if the service supports it or if the spec changes
+          //       (https://reconciliation-api.github.io/specs/draft/#dfn-reconciliation-result-batch)
+          // totalItems: obj.results[0].candidates.length,
+          totalItems: obj[0].result.length,
           items: results,
         };
       default:
