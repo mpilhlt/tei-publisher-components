@@ -5,9 +5,9 @@ import { Registry } from './registry.js';
 // TODO:
 // - strings <- types
 // - use scheme#types in @type output?
-// - documentation
 // - [?] test with other providers
 // - [?] test inside custom connector
+// - [√] documentation
 // - [√] be more robust with differences between API versions
 // - [√] more fields reconc service <-> TEI Publisher
 
