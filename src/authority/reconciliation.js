@@ -3,10 +3,9 @@ import { maxSatisfying, valid } from 'es-semver';
 import { Registry } from './registry.js';
 
 // TODO:
-// - strings <- types
-// - use scheme#types in @type output?
-// - [?] test with other providers
-// - [?] test inside custom connector
+// - [?] use tei:xenoData in register.xml?
+// - [√] test with other providers
+// - [√] test inside custom connector
 // - [√] documentation
 // - [√] be more robust with differences between API versions
 // - [√] more fields reconc service <-> TEI Publisher
@@ -176,7 +175,7 @@ export class ReconciliationService extends Registry {
     } else {
       return Promise.reject()
     }
-    return fetch(`${viewUrl}.json`)
+    return fetch(viewUrl, {method: "GET", headers: {Accept: "application/json"}})
       .then((response) => {
         if (response.ok) {
           return response.json();
@@ -197,7 +196,7 @@ export class ReconciliationService extends Registry {
    *
    * @param {String} version      - the requested reconciliation API version
    * @param {Object} obj          - the response to be parsed
-   * @returns {Object[]} results  - an array of json objects (results)
+   * @returns {Object {totalItems: Int, items: Object[]}} results - a json object (results)
    */
   _parseResponse(version, obj) {
     const results = [];
