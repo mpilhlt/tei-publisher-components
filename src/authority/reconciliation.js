@@ -2,14 +2,6 @@
 import { maxSatisfying, valid } from 'es-semver';
 import { Registry } from './registry.js';
 
-// TODO:
-// - [?] use tei:xenoData in register.xml?
-// - [√] test with other providers
-// - [√] test inside custom connector
-// - [√] documentation
-// - [√] be more robust with differences between API versions
-// - [√] more fields reconc service <-> TEI Publisher
-
 /**
  * Return a JSON object representing the reconciliation service manifest
  *
@@ -97,13 +89,13 @@ export class ReconciliationService extends Registry {
         this.reconcVersion = !(this.ReconcConfig.versions) ? '0.1.0' : maxSatisfying(this.ReconcConfig.versions, '<0.3.1', {'loose': true, 'includePrerelease': true});
         if (this.debug) {
           console.log(
-            'Reconciliation connector for register \'%s\' at endpoint <%s> (v%s).',
+            '<pb-reconc-authority/constructor> Reconciliation connector for register \'%s\' at endpoint <%s> (v%s).',
             this._register, this.endpoint, this.reconcVersion
           );
           if (this.processLang || this.acceptLang) {
-            console.log('Using processLang %s and acceptLang %s.', this.processLang, this.acceptLang );
+            console.log('<pb-reconc-authority/constructor> Using processLang %s and acceptLang %s.', this.processLang, this.acceptLang );
           }
-          // console.log('Using config: %o', this.ReconcConfig);
+          // console.log('<pb-reconc-authority/constructor> Using config: %o', this.ReconcConfig);
         }
       })
   }
@@ -115,7 +107,7 @@ export class ReconciliationService extends Registry {
    * @returns {Promise}  - a promise
    */
   async query(key) {
-    // console.log(`Building request for "%s", (v%s)...`, key, this.reconcVersion)
+    // console.log(`<pb-reconc-authority/query> Building request for "%s", (v%s)...`, key, this.reconcVersion)
     const qInit = qRequestInit(this.reconcVersion, key);
     if (this.acceptLang && this.reconcVersion === '0.3.0-alpha') {
       qInit.headers["Accept-Language"] = this.acceptLang
@@ -149,6 +141,9 @@ export class ReconciliationService extends Registry {
     return new Promise((resolve, reject) => {
       const rawid = this._prefix ? id.substring(this._prefix.length + 1) : id;
       const url = this.ReconcConfig.preview.url.replace('{{id}}', encodeURIComponent(rawid));
+      if (this.debug) {
+        console.log(`<pb-reconc-authority/info> Retrieve info from %s ...`, url);
+      }
       fetch(url)
       .then(response => response.text())
       .then((output) => {
@@ -169,26 +164,11 @@ export class ReconciliationService extends Registry {
    */
   async getRecord(key) {
     const id = this._prefix ? key.substring(this._prefix.length + 1) : key;
-    let viewUrl = '';
-    if (this.ReconcConfig.view) {
-      viewUrl = this.ReconcConfig.view.url.replace('{{id}}', id);
-    } else {
-      return Promise.reject()
+    if (this.debug) {
+      console.log(`<pb-reconc-authority/getRecord> Retrieve record for %s from %s (i.e. run a reconc. query)...`, id);
     }
-    return fetch(viewUrl, {method: "GET", headers: {Accept: "application/json"}})
-      .then((response) => {
-        if (response.ok) {
-          return response.json();
-        }
-        return Promise.reject();
-      })
-      .then((json) => {
-        const output = { ... json};
-        output.name = json.prefLabel;
-        output.link = viewUrl;
-        return output;
-      })
-      .catch(() => Promise.reject());
+    const result = await this.query(id);
+    return result.items[0];
   }
 
   /**
@@ -223,7 +203,7 @@ export class ReconciliationService extends Registry {
               register: this._register,
               id: (this._prefix ? `${this._prefix}-${item.id}` : item.id),
               label: item.name,
-              type: item.type,
+              type: item.type[0].name,
               details: this.description,
               score: item.score,
               link: this.view,
@@ -234,8 +214,8 @@ export class ReconciliationService extends Registry {
         if (this.debug) {
           // TODO: Fix if the service supports it or if the spec changes
           //       (https://reconciliation-api.github.io/specs/draft/#dfn-reconciliation-result-batch)
-          // console.log('Reconciliation has %s results: %o', obj.results[0].candidates.length, results);
-          console.log('Reconciliation has %s results: %o', obj[0].result.length, results);
+          // console.log('<pb-reconc-authority/_parseResponse> Reconciliation has %s results: %o', obj.results[0].candidates.length, results);
+          console.log('<pb-reconc-authority/_parseResponse> Reconciliation has %s results: %o', obj[0].result.length, results);
         }
         return {
           // TODO: Fix if the service supports it or if the spec changes
@@ -270,7 +250,7 @@ export class ReconciliationService extends Registry {
           results.push(result);
         });
         if (this.debug) {
-          console.log('Reconciliation has %s results: %o', obj.q0.result.length, results);
+          console.log('<pb-reconc-authority/_parseResponse> Reconciliation has %s results: %o', obj.q0.result.length, results);
         }
         return {
             totalItems: obj.q0.result.length,

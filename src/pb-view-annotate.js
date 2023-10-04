@@ -9,14 +9,14 @@ import { get as i18n } from './pb-i18n.js';
 /**
  * Return the first child of ancestor which contains current.
  * Used to adjust nested anchor points.
- * 
+ *
  * @param {Node} current the anchor node
  * @param {Node} ancestor the context ancestor node
  * @returns {Node} first child of ancestor containing current
  */
 function extendRange(current, ancestor) {
   let parent = current;
-  while (parent.parentNode !== ancestor) {
+  while (parent.parentNode && parent.parentNode !== ancestor) {
     parent = parent.parentElement;
   }
   return parent;
@@ -25,7 +25,7 @@ function extendRange(current, ancestor) {
 /**
  * Check if the nodeToCheck should be ignored when computing offsets.
  * Applies e.g. to footnote markers.
- * 
+ *
  * @param {Node} nodeToCheck the node to check
  * @returns true if node should be ignored
  */
@@ -107,7 +107,7 @@ function ancestors(node, selector) {
 /**
  * Find the next text node after the current node.
  * Descends into elements.
- * 
+ *
  * @param {Node} node the current node
  * @returns next text node or the current node if none is found
  */
@@ -209,11 +209,11 @@ function clearProperties(teiRange) {
  * An extended `PbView`, which supports annotations to be added
  * and edited by the user. Handles mouse selection and keeps track
  * of the annotations made.
- * 
+ *
  * Interaction with the actual editing form is entirely done via events.
  * The class itself does not provide any editing facility, except for
  * handling deletions.
- * 
+ *
  * @fires pb-selection-changed - fired when user selects text
  * @fires pb-annotations-changed - fired when an annotation was added or changed
  * @fires pb-annotation-detail - fired to request additional details about an annotation
@@ -733,7 +733,6 @@ class PbViewAnnotate extends PbView {
 
     const div = document.createElement('div');
     div.className = 'toolbar';
-
     const typeInd = document.createElement('span');
     typeInd.className = 'annotation-type';
     div.appendChild(typeInd);
@@ -756,6 +755,7 @@ class PbViewAnnotate extends PbView {
       this.deleteAnnotation(span);
     });
     div.appendChild(delBtn);
+
     wrapper.appendChild(div);
 
     const root = this.shadowRoot.getElementById('view');
