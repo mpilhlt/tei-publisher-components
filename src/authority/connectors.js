@@ -29,7 +29,7 @@ export function createConnectors(endpoint, root) {
       case 'GF':
         instance = new Anton(configElem);
         break;
-      case 'ReconciliationService':
+      case 'Reconciliation':
         instance = new ReconciliationService(configElem);
         break;
       case 'Custom':
