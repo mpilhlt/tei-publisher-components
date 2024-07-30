@@ -16,7 +16,7 @@ import { get as i18n } from './pb-i18n.js';
  */
 function extendRange(current, ancestor) {
   let parent = current;
-  while (parent.parentNode !== ancestor) {
+  while (parent.parentNode && parent.parentNode !== ancestor) {
     parent = parent.parentElement;
   }
   return parent;
@@ -471,7 +471,7 @@ class PbViewAnnotate extends PbView {
       return null;
     }
 
-    console.log('<pb-view-annotate> Range before adjust: %o %o', startPoint, endPoint);
+    // console.log('<pb-view-annotate> Range before adjust: %o %o', startPoint, endPoint);
     if (startPoint[1] === startPoint[0].textContent.length) {
       // try to find the next text node
       const nextNode = nextTextNode(context, startPoint[0]);
@@ -496,7 +496,7 @@ class PbViewAnnotate extends PbView {
       range.setEnd(endPoint[0], endPoint[1]);
     }
 
-    console.log('<pb-view-annotate> Range: %o', range);
+    // console.log('<pb-view-annotate> Range: %o', range);
     const span = document.createElement('span');
     const addClass = teiRange.properties[this.getKey(teiRange.type)] === '' ? 'incomplete' : '';
     span.className = `annotation annotation-${teiRange.type} ${teiRange.type} ${addClass} ${
@@ -579,7 +579,7 @@ class PbViewAnnotate extends PbView {
       }
       this._markSelection(range);
       this._currentSelection = range;
-      console.log('<pb-view-annotate> selection: %o', range);
+      // console.log('<pb-view-annotate> selection: %o', range);
 
       if (changed) {
         setTimeout(() => {
@@ -631,6 +631,7 @@ class PbViewAnnotate extends PbView {
   }
 
   updateAnnotation(teiRange, batch = false) {
+    // console.log('pb-view-annotate.js, function updateAnnotation. teiRange: %o', teiRange);
     teiRange = clearProperties(teiRange);
     const result = this._updateAnnotation(teiRange, batch);
     if (result) {
@@ -664,7 +665,7 @@ class PbViewAnnotate extends PbView {
     if (info.properties) {
       adjustedRange.properties = info.properties;
     }
-    console.log('<pb-view-annotate> range adjusted: %o', adjustedRange);
+    // console.log('<pb-view-annotate> range adjusted: %o', adjustedRange);
     this._ranges.push(clearProperties(adjustedRange));
     this.emitTo('pb-annotations-changed', {
       type: adjustedRange.type,
@@ -696,7 +697,7 @@ class PbViewAnnotate extends PbView {
       this._rangesMap.delete(span);
       const pos = this._ranges.indexOf(teiRange);
 
-      console.log('<pb-view-annotate> deleting annotation %o', teiRange);
+      // console.log('<pb-view-annotate> deleting annotation %o', teiRange);
 
       this._ranges.splice(pos, 1);
     }
@@ -735,7 +736,17 @@ class PbViewAnnotate extends PbView {
   }
 
   editAnnotation(span, properties) {
-    if (span.dataset.tei) {
+    // console.log(`pb-view-annotate.js, function editAnnotation, span %o, data %o`, span, properties);
+    if (span.dataset.type === 'edit') {
+      let range = this._rangesMap.get(span);
+      if (range) {
+        range.properties = properties;
+        range = clearProperties(range);
+        this.emitTo('pb-annotations-changed', { ranges: this._ranges });
+      } else {
+        console.error('no range found for edit span %o', span);
+      }
+    } else if (span.dataset.tei) {
       // TODO: check in _ranges if it has already been modified
       const context = span.closest('[data-tei]');
       let range = this._ranges.find(r => r.type === 'modify' && r.node === span.dataset.tei);
@@ -769,6 +780,7 @@ class PbViewAnnotate extends PbView {
   }
 
   _editAnnotation(ev) {
+    // console.log(`pb-view-annotate, function _editAnnotation, data %o`, ev);
     this.editAnnotation(ev.detail.target, ev.detail.properties);
   }
 
@@ -809,7 +821,6 @@ class PbViewAnnotate extends PbView {
 
     const div = document.createElement('div');
     div.className = 'toolbar';
-
     const typeInd = document.createElement('span');
     typeInd.className = 'annotation-type';
     div.appendChild(typeInd);
@@ -838,6 +849,7 @@ class PbViewAnnotate extends PbView {
       this.deleteAnnotation(span);
     });
     div.appendChild(delBtn);
+
     wrapper.appendChild(div);
 
     const root = this.shadowRoot.getElementById('view');
@@ -995,7 +1007,7 @@ class PbViewAnnotate extends PbView {
       .filter(token => token && token.length > 0)
       .map(token => escape(token))
       .join('|');
-    console.log(`<pb-view-annotate> Searching content for ${expr}...`);
+    // console.log(`<pb-view-annotate> Searching content for ${expr}...`);
     const regex = new RegExp(expr, this.caseSensitive ? 'g' : 'gi');
     const walker = document.createTreeWalker(
       this.shadowRoot.getElementById('view'),
