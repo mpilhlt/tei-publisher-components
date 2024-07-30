@@ -109,8 +109,8 @@ export class Custom extends Registry {
   }
 
   /**
-   *
-   * @param {any} item
+   * 
+   * @param {any} item 
    * @returns {Promise}
    */
   async select(item) {
@@ -141,18 +141,17 @@ export class Custom extends Registry {
     return fetch(`${this._endpoint}/api/register/${this._register}/${encodeURIComponent(item.id)}`, {
       method: 'POST',
       mode: "cors",
-      credentials: "same-origin",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(entry),
+			credentials: "same-origin",
+			headers: {
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify(entry),
     })
-      .then((response) => response.json())
-      .catch((error) => {
-        if (this.debug) {
-          console.log(`<pb-custom-authority/select> Error %s ...`, error.message);
-        }
-        Promise.reject(error);
-      });
+    .then((response) => {
+      if (response.ok) {
+        return response.json();
+      }
+      return Promise.reject(Error(response.status.toString()));
+    });
   }
 }
