@@ -77,6 +77,12 @@ export class PbAuthorityLookup extends themableMixin(pbMixin(LitElement)) {
       debug: {
         type: Boolean
       },
+      /**
+       * Whether to give verbose debugging output in the browser console.
+       */
+      debug: {
+        type: Boolean
+      },
       _results: {
         type: Array,
       },
