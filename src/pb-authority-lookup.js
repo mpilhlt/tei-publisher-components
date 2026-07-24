@@ -351,14 +351,19 @@ export class PbAuthorityLookup extends themableMixin(pbMixin(LitElement)) {
     `;
   }
 
-  _select(item) {
+  async _select(item) {
     const connector = this._authorities[item.register];
+    // Build the properties map from the connector's own `fields` config (see
+    // Registry.buildProperties/parseFieldsConfig) instead of the single hardcoded
+    // `{ ref: item.id }` this used to always emit - lets an admin configure which of a match's
+    // fields (id, label, type, score, or an extend:-sourced property) end up under which output
+    // property name. Falls back to the same default mapping a connector with no `fields`
+    // attribute configured would produce, for the edge case of no registered connector at all.
+    const properties = connector ? await connector.buildProperties(item).catch(() => ({ key: item.id })) : { key: item.id };
     const options = {
       strings: item.strings,
       type: item.register,
-      properties: {
-        ref: item.id,
-      },
+      properties,
     };
     if (connector) {
       connector
