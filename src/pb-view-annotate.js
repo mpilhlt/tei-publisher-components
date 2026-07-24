@@ -1351,6 +1351,19 @@ class PbViewAnnotate extends PbView {
           margin-top: 1em;
         }
 
+        /* A reconciliation service's preview HTML (injected here via
+         * pb-annotation-detail -- see annotations.js) is not bounded in size: a
+         * service may reasonably list several properties, or an image thumbnail,
+         * making the rendered content taller than the handful of lines this popup
+         * was originally sized for. Cap it and let it scroll internally instead of
+         * growing unbounded and overlapping/obscuring other page content -- a
+         * click-to-view info popup should stay compact regardless of how rich the
+         * underlying preview is. */
+        .annotation-popup .info {
+          max-height: 16em;
+          overflow-y: auto;
+        }
+
         .annotation-popup table {
           width: 100%;
         }
