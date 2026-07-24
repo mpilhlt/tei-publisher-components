@@ -159,7 +159,7 @@ export class ReconciliationService extends Registry {
         label: item.name,
         link,
         details,
-        provider: 'Reconciliation',
+        provider: this._prefix ? `Reconciliation (${this._prefix})` : 'Reconciliation',
       };
     });
 
