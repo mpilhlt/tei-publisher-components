@@ -1,6 +1,14 @@
 /* eslint-disable class-methods-use-this */
 import { Registry } from './registry.js';
 
+// Illustrative placeholder only - a generic book icon, not fetched from GND (which has no
+// depiction/image field of its own) - demonstrates that a connector's own info() preview can
+// include a thumbnail image the same way the reconcile profile's server-rendered /preview does
+// for reconciliation-service-backed types, even for a connector that renders its own bespoke HTML
+// rather than going through that server-side mechanism at all.
+const WORK_ICON =
+  'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MCIgaGVpZ2h0PSI3MCIgdmlld0JveD0iMCAwIDgwIDcwIj48cmVjdCB4PSI0IiB5PSI4IiB3aWR0aD0iMzQiIGhlaWdodD0iNTQiIHJ4PSIzIiBmaWxsPSIjMjk4MGI5Ii8+PHJlY3QgeD0iNDIiIHk9IjgiIHdpZHRoPSIzNCIgaGVpZ2h0PSI1NCIgcng9IjMiIGZpbGw9IiMyNDcxYTMiLz48cmVjdCB4PSI4IiB5PSIxNCIgd2lkdGg9IjI2IiBoZWlnaHQ9IjQiIGZpbGw9IiNmZmYiLz48cmVjdCB4PSI4IiB5PSIyMiIgd2lkdGg9IjI2IiBoZWlnaHQ9IjQiIGZpbGw9IiNmZmYiLz48cmVjdCB4PSI0NiIgeT0iMTQiIHdpZHRoPSIyNiIgaGVpZ2h0PSI0IiBmaWxsPSIjZmZmIi8+PHJlY3QgeD0iNDYiIHk9IjIyIiB3aWR0aD0iMjYiIGhlaWdodD0iNCIgZmlsbD0iI2ZmZiIvPjwvc3ZnPg==';
+
 function _details(item) {
   let professions = '';
   if (item.professionOrOccupation && item.professionOrOccupation.length > 0) {
@@ -124,7 +132,10 @@ export class GND extends Registry {
           } else if (json.type.indexOf('AuthorityResource') > -1) {
             info = this.infoPerson(json);
           }
+          const icon =
+            this._register === 'work' ? `<img src="${WORK_ICON}" alt="" style="max-width:100%; max-height:8em;"/>` : '';
           const output = `
+          ${icon}
           <h3 class="label">
             <a href="https://${json.id}" target="_blank"> ${json.preferredName} </a>
           </h3>
@@ -154,5 +165,37 @@ export class GND extends Registry {
       return `<p>${terms.join(', ')}</p>`;
     }
     return '';
+  }
+
+  /**
+   * Fetch additional property values for a single matched entry beyond what query() already
+   * returned, using the same normalized record getRecord() already builds (link/note/profession/
+   * birth/death) - lets a `fields` mapping's `extend:propId` source resolve for a GND-backed match
+   * the same way it already does for a reconciliation-service-backed one, via
+   * Registry.buildProperties (this override is what makes Custom.fetchExtend's own delegation to
+   * wrapped connectors actually find something, instead of always silently resolving to "no
+   * value").
+   *
+   * @param {string} id the id to fetch extended properties for
+   * @param {string[]} propertyIds the property ids to fetch
+   * @returns {Promise<Object.<string, *>>} promise resolving to a map of propertyId -> value
+   */
+  async fetchExtend(id, propertyIds) {
+    try {
+      const record = await this.getRecord(id);
+      const result = {};
+      propertyIds.forEach(propId => {
+        let value = record[propId];
+        if (Array.isArray(value)) {
+          value = value.filter(Boolean).join('; ');
+        }
+        if (value !== undefined && value !== null && value !== '') {
+          result[propId] = value;
+        }
+      });
+      return result;
+    } catch (e) {
+      return {};
+    }
   }
 }

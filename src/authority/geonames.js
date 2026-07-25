@@ -1,5 +1,13 @@
 import { Registry } from './registry.js';
 
+// Illustrative placeholder only - a generic location-pin icon, not fetched from GeoNames (which
+// has no depiction/image field of its own) - demonstrates that a connector's own info() preview
+// can include a thumbnail image the same way the reconcile profile's server-rendered /preview
+// does for reconciliation-service-backed types, even for a connector that renders its own bespoke
+// HTML rather than going through that server-side mechanism at all.
+const PLACE_ICON =
+  'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2MCIgaGVpZ2h0PSI4MCIgdmlld0JveD0iMCAwIDYwIDgwIj48cGF0aCBkPSJNMzAgMkMxNCAyIDIgMTQgMiAzMGMwIDIyIDI4IDQ4IDI4IDQ4czI4LTI2IDI4LTQ4QzU4IDE0IDQ2IDIgMzAgMnoiIGZpbGw9IiNjMDM5MmIiLz48Y2lyY2xlIGN4PSIzMCIgY3k9IjMwIiByPSIxMiIgZmlsbD0iI2ZmZiIvPjwvc3ZnPg==';
+
 export class GeoNames extends Registry {
   constructor(configElem) {
     super(configElem);
@@ -49,6 +57,7 @@ export class GeoNames extends Registry {
             return;
           }
           const output = `
+            <img src="${PLACE_ICON}" alt="" style="max-width:100%; max-height:8em;"/>
             <h3 class="label">
               <a href="${json.link}" target="_blank">${json.name}</a>
             </h3>
@@ -89,12 +98,45 @@ export class GeoNames extends Registry {
         output.country = json.countryName;
         output.region = json.adminName1;
         output.note = json.fcodeName;
-        output.links = [
-          `https://www.geonames.org/${json.geonameId}`,
-          `https://${json.wikipediaURL}`,
-        ];
+        output.link = `https://www.geonames.org/${json.geonameId}`;
+        output.links = [output.link, `https://${json.wikipediaURL}`];
+        if (json.lat && json.lng) {
+          output.geo = `${json.lat},${json.lng}`;
+        }
         return output;
       })
       .catch(() => Promise.reject());
+  }
+
+  /**
+   * Fetch additional property values for a single matched entry beyond what query() already
+   * returned, using the same normalized record getRecord() already builds (region/country/note/
+   * link/geo) - lets a `fields` mapping's `extend:propId` source resolve for a GeoNames-backed
+   * match the same way it already does for a reconciliation-service-backed one, via
+   * Registry.buildProperties (this override is what makes Custom.fetchExtend's own delegation to
+   * wrapped connectors actually find something, instead of always silently resolving to "no
+   * value").
+   *
+   * @param {string} id the id to fetch extended properties for
+   * @param {string[]} propertyIds the property ids to fetch
+   * @returns {Promise<Object.<string, *>>} promise resolving to a map of propertyId -> value
+   */
+  async fetchExtend(id, propertyIds) {
+    try {
+      const record = await this.getRecord(id);
+      const result = {};
+      propertyIds.forEach(propId => {
+        let value = record[propId];
+        if (Array.isArray(value)) {
+          value = value.filter(Boolean).join('; ');
+        }
+        if (value !== undefined && value !== null && value !== '') {
+          result[propId] = value;
+        }
+      });
+      return result;
+    } catch (e) {
+      return {};
+    }
   }
 }
