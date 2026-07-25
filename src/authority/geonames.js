@@ -80,6 +80,9 @@ export class GeoNames extends Registry {
    * @returns {Promise<any>} promise resolving to the JSON record returned by the endpoint
    */
   async getRecord(key) {
+    // Assumes `key` actually carries this connector's own prefix (see the equivalent, more
+    // fully-explained _stripPrefix() in reconciliation.js) - a `key` sourced from elsewhere
+    // (the local register, a differently-prefixed nested connector) would be sliced wrong.
     const id = this._prefix ? key.substring(this._prefix.length + 1) : key;
     return fetch(
       `https://secure.geonames.org/getJSON?geonameId=${encodeURIComponent(id)}&username=${
@@ -98,6 +101,12 @@ export class GeoNames extends Registry {
         output.country = json.countryName;
         output.region = json.adminName1;
         output.note = json.fcodeName;
+        // Singular "link" is what a `fields="...=extend:link"` mapping reads (see fetchExtend()
+        // below and Registry.buildProperties) - it was missing before, silently making that
+        // source always resolve to nothing for GeoNames matches. Plural "links" is this
+        // codebase's existing multi-link convention shared with the other connectors
+        // (metagrid.js, anton.js, kbga.js); kept alongside "link" for consistency even though
+        // nothing currently reads it back out.
         output.link = `https://www.geonames.org/${json.geonameId}`;
         output.links = [output.link, `https://${json.wikipediaURL}`];
         if (json.lat && json.lng) {

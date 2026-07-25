@@ -436,15 +436,21 @@ class PbViewAnnotate extends PbView {
     this._scheduleMarkerRefresh();
   }
 
+  /** Which JSON property of an annotation's data holds its authority id, for this type. */
   getKey(type) {
     return this.keyMap[type] || this.key;
   }
 
   /**
-   * Resolve the identifier for an annotation's data, falling back to the
-   * legacy `key` attribute when the type-specific key (e.g. `ref`) is not
-   * present. This keeps annotations authored before a `keyMap` was
-   * configured (which only ever set `@key`) working correctly.
+   * Resolve the id from an annotation's data, falling back to the legacy `key` property
+   * when the type's configured key (getKey(), typically `ref`) is absent. Needed because
+   * `keyMap`/`ref`-based ids are a later addition: any annotation created before a type's
+   * keyMap entry existed only ever had `key` set, and would otherwise look id-less (see
+   * onTrigger below, where "no id" means "show a raw properties table instead of an entity
+   * preview"). Use this instead of a plain `data[getKey(type)]` read anywhere an annotation
+   * might predate its type's current keyMap config; call sites that only ever *write* fresh
+   * annotation data (e.g. _updateAnnotation, search()'s result entries) don't need it, since
+   * they use the current key convention consistently by construction.
    */
   getId(data, type) {
     const primaryKey = this.getKey(type);
@@ -653,6 +659,11 @@ class PbViewAnnotate extends PbView {
 
     console.log('<pb-view-annotate> Range: %o', range);
     const span = document.createElement('span');
+    // In practice this never matches: addAnnotation()/updateAnnotation() always run
+    // properties through clearProperties() first, which drops empty-string values
+    // entirely rather than leaving them as ''. A brand-new annotation's initial
+    // "incomplete" styling is set later, by _markIncompleteAnnotations() (which uses
+    // getId()'s absent-or-empty check, not this strict === '' one).
     const addClass = teiRange.properties[this.getKey(teiRange.type)] === '' ? 'incomplete' : '';
     span.className = `annotation annotation-${teiRange.type} ${teiRange.type} ${addClass} ${
       teiRange.before ? 'before' : ''
@@ -1032,6 +1043,8 @@ class PbViewAnnotate extends PbView {
         })`;
         const id = this.getId(data, type);
         if (id) {
+          // Linked entity: let whoever handles pb-annotation-detail (e.g. annotations.js)
+          // fetch and render a real preview into `info`.
           this.emitTo('pb-annotation-detail', {
             type,
             id,
@@ -1040,7 +1053,10 @@ class PbViewAnnotate extends PbView {
             ready: () => instance.setContent(wrapper),
           });
         } else {
-          // show properties as key/value table
+          // Not linked to anything yet (or a non-authority annotation type, which has no
+          // id concept at all): fall back to a plain key/value dump of whatever properties
+          // it does have, e.g. for `sic`/`reg`/`app` annotations that don't reference an
+          // authority entry.
           info.innerHTML = '';
           const keys = Object.keys(data);
           if (keys.length === 0) {
@@ -1178,6 +1194,8 @@ class PbViewAnnotate extends PbView {
         if (annoData && annoType) {
           const parsed = JSON.parse(annoData) || {};
           isAnnotated = annoType === type;
+          // getId(), not a plain getKey() lookup: a text occurrence can already be tagged
+          // with a legacy @key-only annotation (see getId's doc comment).
           ref = this.getId(parsed, type);
         }
 
@@ -1193,6 +1211,9 @@ class PbViewAnnotate extends PbView {
           textNode: node,
           kwic: kwicText(str, start + match.index, start + end),
         };
+        // Written under the canonical key name (getKey), not getId: this builds a fresh
+        // result entry for the "other occurrences" UI, so there is no legacy shape to
+        // preserve here the way there is when reading an existing annotation's data.
         entry[this.getKey(type)] = ref;
         result.push(entry);
       }

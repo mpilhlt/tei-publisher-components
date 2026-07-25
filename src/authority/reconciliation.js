@@ -186,6 +186,14 @@ export class ReconciliationService extends Registry {
    * back the raw id this service itself actually knows about. Needed anywhere a raw id must be
    * sent back to the service - info()'s preview lookup already did this inline; fetchExtend()/
    * getRecord() below reuse the same logic rather than duplicating the substring arithmetic.
+   *
+   * Assumes `id` actually carries this connector's own prefix - it blindly chops off
+   * `this._prefix.length + 1` characters regardless of what's actually there. Custom's
+   * federated query() (custom.js) can hand this connector an id that came from a different
+   * nested connector or the local register instead, and this method has no way to detect that
+   * mismatch; it just returns a garbage substring. Callers that got the id from somewhere other
+   * than this connector's own query() should not assume _stripPrefix()/fetchExtend()/getRecord()
+   * will do anything sensible with it.
    */
   _stripPrefix(id) {
     return this._prefix ? id.substring(this._prefix.length + 1) : id;

@@ -87,6 +87,12 @@ export class PbAuthorityLookup extends themableMixin(pbMixin(LitElement)) {
     this._authorities = {};
     this.noOccurrences = false;
     this.group = 'tei';
+    // Debounce search-as-you-type (_queryChanged -> _scheduleQuery) and guard against
+    // out-of-order responses: each _query() call captures the current _queryGeneration,
+    // and every async continuation (query() itself, then the occurrences() round-trip)
+    // checks it's still current before touching `this._results`. Without this, a fast
+    // keystroke could let an earlier request's response land after a later one's and
+    // silently overwrite fresher results with stale ones.
     this._queryGeneration = 0;
     this._queryDebounceMs = 300;
   }
@@ -197,6 +203,15 @@ export class PbAuthorityLookup extends themableMixin(pbMixin(LitElement)) {
     return info;
   }
 
+  /**
+   * Each result item carries three independent badges: `register` (its authority type,
+   * always present), `occurrences` (how often this entity is already referenced elsewhere
+   * in the current document, fetched separately via _occurrences() below), and `source`
+   * (the `provider` label a connector's own query() tags its results with, e.g. "local",
+   * "GND", "GeoNames" - shown so a federated lookup, i.e. Custom wrapping several nested
+   * connectors, see custom.js, doesn't present merged results as if they all came from one
+   * place).
+   */
   _formatItem(item) {
     return html`
       <li>

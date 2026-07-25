@@ -90,6 +90,9 @@ export class GND extends Registry {
    * @returns {Promise<any>} promise resolving to the JSON record returned by the endpoint
    */
   async getRecord(key) {
+    // Assumes `key` actually carries this connector's own prefix (see the equivalent, more
+    // fully-explained _stripPrefix() in reconciliation.js) - a `key` sourced from elsewhere
+    // (the local register, a differently-prefixed nested connector) would be sliced wrong.
     const id = this._prefix ? key.substring(this._prefix.length + 1) : key;
     return fetch(`https://lobid.org/gnd/${id}.json`)
       .then(response => {
