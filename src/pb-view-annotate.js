@@ -440,6 +440,23 @@ class PbViewAnnotate extends PbView {
     return this.keyMap[type] || this.key;
   }
 
+  /**
+   * Resolve the identifier for an annotation's data, falling back to the
+   * legacy `key` attribute when the type-specific key (e.g. `ref`) is not
+   * present. This keeps annotations authored before a `keyMap` was
+   * configured (which only ever set `@key`) working correctly.
+   */
+  getId(data, type) {
+    const primaryKey = this.getKey(type);
+    if (data[primaryKey]) {
+      return data[primaryKey];
+    }
+    if (primaryKey !== 'key' && data.key) {
+      return data.key;
+    }
+    return data[primaryKey];
+  }
+
   _resizeHandler() {
     let _pendingCallback = null;
 
@@ -903,7 +920,7 @@ class PbViewAnnotate extends PbView {
     const jsonOld = JSON.parse(span.dataset.annotation);
     const json = Object.assign(jsonOld || {}, properties);
     span.dataset.annotation = JSON.stringify(json);
-    if (json[this.getKey(span.dataset.type)] !== '') {
+    if (this.getId(json, span.dataset.type)) {
       span.classList.remove('incomplete');
     }
     this._scheduleMarkerRefresh();
@@ -1013,10 +1030,11 @@ class PbViewAnnotate extends PbView {
         typeInd.style.color = `var(${
           color && color.isLight ? '--pb-color-primary' : '--pb-color-inverse'
         })`;
-        if (data[this.getKey(type)]) {
+        const id = this.getId(data, type);
+        if (id) {
           this.emitTo('pb-annotation-detail', {
             type,
-            id: data[this.getKey(type)],
+            id,
             container: info,
             span,
             ready: () => instance.setContent(wrapper),
@@ -1160,7 +1178,7 @@ class PbViewAnnotate extends PbView {
         if (annoData && annoType) {
           const parsed = JSON.parse(annoData) || {};
           isAnnotated = annoType === type;
-          ref = parsed[this.getKey(type)];
+          ref = this.getId(parsed, type);
         }
 
         const startRange = rangeToPoint(node, match.index);
@@ -1231,8 +1249,8 @@ class PbViewAnnotate extends PbView {
     elem.querySelectorAll('.annotation.authority').forEach(annotation => {
       if (annotation.dataset.type) {
         const data = JSON.parse(annotation.dataset.annotation);
-        const key = this.getKey(annotation.dataset.type);
-        if (!data[key] || data[key].length === 0) {
+        const id = this.getId(data, annotation.dataset.type);
+        if (!id || id.length === 0) {
           annotation.classList.add('incomplete');
         } else {
           annotation.classList.remove('incomplete');

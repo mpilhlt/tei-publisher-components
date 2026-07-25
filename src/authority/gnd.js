@@ -102,6 +102,13 @@ export class GND extends Registry {
         const output = { ...json };
         output.name = json.preferredName;
         output.link = json.id;
+        // Alias for "link" matching the reconcile profile's own "gnd" data-extension
+        // property id (see reconc-config.xql) - lets an `extend:gnd` field mapping
+        // resolve the same GND URI whether the match came directly from this GND
+        // connector or from a nested ReconciliationService connector answering the
+        // same request (Custom.fetchExtend tries each in turn with the same property
+        // ids, see custom.js).
+        output.gnd = json.id;
         if (json.dateOfBirth && json.dateOfBirth.length > 0) {
           output.birth = json.dateOfBirth[0];
         }
