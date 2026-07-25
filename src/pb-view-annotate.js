@@ -659,12 +659,13 @@ class PbViewAnnotate extends PbView {
 
     console.log('<pb-view-annotate> Range: %o', range);
     const span = document.createElement('span');
-    // In practice this never matches: addAnnotation()/updateAnnotation() always run
-    // properties through clearProperties() first, which drops empty-string values
-    // entirely rather than leaving them as ''. A brand-new annotation's initial
-    // "incomplete" styling is set later, by _markIncompleteAnnotations() (which uses
-    // getId()'s absent-or-empty check, not this strict === '' one).
-    const addClass = teiRange.properties[this.getKey(teiRange.type)] === '' ? 'incomplete' : '';
+    // Same absent-or-empty check _markIncompleteAnnotations() uses below, via getId()'s
+    // key-with-legacy-@key-fallback resolution - a strict === '' comparison against
+    // properties[getKey(type)] would never match here, since addAnnotation()/
+    // updateAnnotation() always run properties through clearProperties() first, which
+    // drops empty-string values entirely rather than leaving them as ''.
+    const id = this.getId(teiRange.properties, teiRange.type);
+    const addClass = !id || id.length === 0 ? 'incomplete' : '';
     span.className = `annotation annotation-${teiRange.type} ${teiRange.type} ${addClass} ${
       teiRange.before ? 'before' : ''
     }`;

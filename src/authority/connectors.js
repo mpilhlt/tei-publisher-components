@@ -14,11 +14,13 @@ import { Custom } from './custom.js';
  * "Custom", which talks to this app's own local register API rather than an external service.
  *
  * The `connector` attribute is matched by exact string, case-sensitively, against a fixed
- * list - anything that doesn't match (including a typo, e.g. "Reconciliation" instead of
- * "ReconciliationService") falls through to `default` and silently becomes a Metagrid
- * connector instead of failing loudly. There's no validation surfacing this at config time; a
- * misconfigured `connector` attribute looks like a working authority that just happens to
- * query the wrong (Metagrid) service.
+ * list; `"Metagrid"` is itself one of the valid names, not just the fallback. Anything else
+ * (including a typo, e.g. "Reconciliation" instead of "ReconciliationService") still becomes
+ * a Metagrid connector - changing that to skip the entry or throw risks either silently
+ * dropping a configured authority or crashing an entire federated Custom search over one bad
+ * nested connector, neither obviously better than today's behaviour - but it is no longer
+ * silent: an unrecognized name is logged loudly so the mistake is visible in devtools instead
+ * of just looking like a working authority that happens to query the wrong service.
  */
 export function createConnectors(endpoint, root) {
   const authorities = [];
@@ -48,7 +50,16 @@ export function createConnectors(endpoint, root) {
       case 'Custom':
         instance = new Custom(endpoint, configElem);
         break;
+      case 'Metagrid':
+        instance = new Metagrid(configElem);
+        break;
       default:
+        console.error(
+          '<pb-authority> connector="%s" is not a recognized connector name - falling back to Metagrid. ' +
+            'Check for a typo (the exact, case-sensitive names are GND, GeoNames, Airtable, KBGA, Anton/GF, ' +
+            'ReconciliationService, Custom, Metagrid).',
+          connector,
+        );
         instance = new Metagrid(configElem);
         break;
     }
