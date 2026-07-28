@@ -392,6 +392,16 @@ export class ReconciliationService extends Registry {
     const proposed = await proposeResponse.json();
     const propertyIds = (proposed?.properties || []).map(p => p.id);
     const values = propertyIds.length > 0 ? await this.fetchExtend(id, propertyIds) : {};
+    // TEI Publisher's own registers.xql (rapi:create-record/rapi:normalize-gender) expects a
+    // "gender" property to be an array of {id, label} objects (matching GND's vocabulary shape,
+    // e.g. id: "https://d-nb.info/standards/vocab/gnd/gender#male") and crashes with a bare
+    // XPTY0004 if it's a plain string instead - which is exactly what a generic reconciliation
+    // service's /extend response gives us (see extractExtendValues above). registers.xql falls
+    // back to rendering id/label as-is for any id it doesn't specifically recognize, so this
+    // doesn't need to match GND's vocabulary URIs, just the shape.
+    if (typeof values.gender === 'string' && values.gender) {
+      values.gender = [{ id: values.gender, label: values.gender }];
+    }
     return { id: rawId, ...values };
   }
 }
