@@ -37,12 +37,46 @@
 <body>
     <pb-demo-snippet>
         <template>
+            <style>
+                nav ul {
+                    display: flex;
+                    justify-content: space-between;
+                    list-style: none;
+                    padding: 0;
+                    margin: 0;
+                }
+            </style>
             <pb-page endpoint="http://localhost:8080/exist/apps/tei-publisher" url-path="query">
-                <pb-document id="document1" path="test/orlik_to_serafin.xml" odd="serafin" view="single"></pb-document>
+                <pb-document id="document1" path="demo/let695.xml" odd="vangogh" view="page"></pb-document>
 
-                <pb-grid-action action="add" class="grid-add" grid="#grid" initial="1">
-                    <button>Add Column</button>
-                </pb-grid-action>
+                <nav role="navigation">
+                    <ul>
+                        <li>
+                            <span role="group" class="light">
+                                <pb-navigation emit="transcription" keyboard="left" subscribe="transcription" direction="backward" unit="page"
+                                    rendition="visible">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="ionicon" viewBox="0 0 512 512">
+                                        <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="48"
+                                            d="M328 112L184 256l144 144" />
+                                    </svg>
+                                </pb-navigation>
+                                <pb-navigation emit="transcription" keyboard="right" subscribe="transcription" direction="forward" unit="page"
+                                    rendition="visible">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="ionicon" viewBox="0 0 512 512">
+                                        <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="48"
+                                            d="M184 112l144 144-144 144" />
+                                    </svg>
+                                </pb-navigation>
+                            </span>
+                        </li>
+                        <li>
+                            <pb-grid-action action="add" class="grid-add" grid="#grid" initial="1">
+                                <button>Add Column</button>
+                            </pb-grid-action>
+                        </li>
+                    </ul>
+                </nav>
+                
                 <!-- Define the grid with one initial column -->
                 <pb-grid id="grid" panels="[0,1]" subscribe="transcription" animation="true">
                     <!-- For every grid column, the following template will be stamped into the page -->
@@ -57,23 +91,23 @@
                                     </svg>
                                 </pb-grid-action>
                             </li>
-                            <template title="Transcription">
-                                <pb-view class="animated" src="document1"
-                                    xpath="! (.//text[@xml:lang = 'la']/body | .//text/body)[1]" emit="transcription">
-                                </pb-view>
-                            </template>
                             <template title="Translation">
-                                <pb-view class="animated" src="document1" xpath="//text[@xml:lang='pl']/body"
+                                <pb-view class="animated" src="document1" map="vg-translation" xpath="//div[@type='original']"
                                     subscribe="transcription"></pb-view>
                             </template>
-                            <template title="Facsimile">
-                                <pb-facsimile base-uri="https://apps.existsolutions.com/cantaloupe/iiif/2/"
-                                    facsimiles='["15929_000_IDL5772_BOss12034_IIIp79.jpg"]' default-zoom-level="0"
-                                    show-navigator="show-navigator" show-navigation-control="show-navigation-control">
-                                </pb-facsimile>
+                            <template title="Notes">
+                                <pb-view src="document1" xpath="//div[@type='original']" subscribe="transcription">
+                                    <pb-param name="view" value="notes" />
+                                </pb-view>
                             </template>
                         </pb-panel>
                     </template>
+                    <pb-panel emit="transcription">
+                        <template title="Transcription">
+                            <pb-view class="animated" src="document1" xpath="//div[@type='original']" emit="transcription" subscribe="transcription">
+                            </pb-view>
+                        </template>
+                    </pb-panel>
                 </pb-grid>
             </pb-page>
         </template>
