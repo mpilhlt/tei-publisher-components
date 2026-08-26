@@ -165,11 +165,13 @@ export class PbView extends themableMixin(pbMixin(LitElement)) {
         type: String,
       },
       /**
-       * If set, rewrite URLs to load pages as static HTML files,
-       * so no TEI Publisher instance is required. Use this in combination with
-       * [tei-publisher-static](https://github.com/eeditiones/tei-publisher-static).
-       * The value should point to the HTTP root path under which the static version
-       * will be hosted. This is used to resolve CSS stylesheets.
+       * If set, load pre-generated part JSON instead of the TEI Publisher API.
+       * The value is the HTTP path prefix for cached data (e.g. `cached` or `output`).
+       * Parts are read from `${static}/${document.path}/index.json` and
+       * `${static}/${document.path}/<part>.json`. CSS is loaded from
+       * `${static}/css/<odd>.css`.
+       * If `index.json` is missing (HTTP 404), the view falls back to dynamic
+       * API rendering and ODD CSS for that document.
        */
       static: {
         type: String,
@@ -354,6 +356,7 @@ export class PbView extends themableMixin(pbMixin(LitElement)) {
     this._chunks = [];
     this._scrollTarget = null;
     this.static = null;
+    this._staticFallback = false;
   }
 
   attributeChangedCallback(name, oldVal, newVal) {
@@ -718,13 +721,29 @@ export class PbView extends themableMixin(pbMixin(LitElement)) {
     const loadContent = this.shadowRoot.getElementById('loadContent');
 
     if (this.static !== null) {
-      this._staticUrl(params).then(url => {
-        loadContent.url = url;
-        loadContent.generateRequest();
-      });
+      this._staticUrl(params)
+        .then(url => {
+          this._updateStyles();
+          if (url) {
+            loadContent.url = url;
+            loadContent.generateRequest();
+            return;
+          }
+          console.log('<pb-view> No static index; falling back to dynamic rendering');
+          this._loadDynamic(params, loadContent);
+        })
+        .catch(error => {
+          console.error('<pb-view> Static URL resolution failed', error);
+          this._loading = false;
+          this.emitTo('pb-end-update');
+        });
       return;
     }
 
+    this._loadDynamic(params, loadContent);
+  }
+
+  _loadDynamic(params, loadContent) {
     if (!this.url) {
       if (this.minApiVersion('1.0.0')) {
         this.url = 'api/parts';
@@ -745,7 +764,20 @@ export class PbView extends themableMixin(pbMixin(LitElement)) {
   }
 
   /**
+   * Base path for pre-generated pb-view data: ``${static}/${document.path}``.
+   */
+  _staticDataBase() {
+    const doc = this.getDocument();
+    if (!doc?.path) {
+      throw new Error('<pb-view> static mode requires a pb-document with a path');
+    }
+    const prefix = (this.static ?? '').replace(/\/+$/, '');
+    return [prefix, doc.path].filter(part => part.length > 0).join('/');
+  }
+
+  /**
    * Use a static URL to load pre-generated content.
+   * @returns {Promise<string|null>} absolute part URL, or `null` to fall back to dynamic
    */
   async _staticUrl(params) {
     function createKey(paramNames) {
@@ -758,7 +790,20 @@ export class PbView extends themableMixin(pbMixin(LitElement)) {
       return urlComponents.join('&');
     }
 
-    const index = await fetch(`index.json`).then(response => response.json());
+    this._staticFallback = false;
+    const base = this._staticDataBase();
+    const indexUrl = this.toAbsoluteURL(`${base}/index.json`);
+    const response = await fetch(indexUrl);
+    if (response.status === 404) {
+      console.log('<pb-view> Static index not found: %s', indexUrl);
+      this._staticFallback = true;
+      return null;
+    }
+    if (!response.ok) {
+      throw new Error(`Failed to load static index ${indexUrl}: ${response.status}`);
+    }
+
+    const index = await response.json();
     const paramNames = ['odd', 'view', 'xpath', 'map'];
     this._params().forEach(param => paramNames.push(`user.${param.getAttribute('name')}`));
     let url = params.id ? createKey([...paramNames, 'id']) : createKey([...paramNames, 'root']);
@@ -768,8 +813,9 @@ export class PbView extends themableMixin(pbMixin(LitElement)) {
       file = index[url];
     }
 
-    console.log('<pb-view> Static lookup %s: %s', url, file);
-    return `${file}`;
+    const partUrl = this.toAbsoluteURL(`${base}/${file}`);
+    console.log('<pb-view> Static lookup %s: %s', url, partUrl);
+    return partUrl;
   }
 
   _clear() {
@@ -1040,12 +1086,20 @@ export class PbView extends themableMixin(pbMixin(LitElement)) {
     }
   }
 
+  /**
+   * Whether static content/CSS should be used.
+   * False when `static` is unset or the last index lookup fell back (404).
+   */
+  _usesStaticAssets() {
+    return this.static !== null && !this._staticFallback;
+  }
+
   _updateStyles() {
     const link = document.createElement('link');
     link.setAttribute('rel', 'stylesheet');
     link.setAttribute('type', 'text/css');
-    if (this.static !== null) {
-      link.setAttribute('href', `${this.static}/css/${this.getOdd()}.css`);
+    if (this._usesStaticAssets()) {
+      link.setAttribute('href', `${this.getEndpoint()}/${this.static}/css/${this.getOdd()}.css`);
     } else {
       link.setAttribute('href', `${this.getEndpoint()}/transform/${this.getOdd()}.css`);
     }
