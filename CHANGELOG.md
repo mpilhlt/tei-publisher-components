@@ -1,3 +1,10 @@
+## [3.6.7](https://github.com/eeditiones/tei-publisher-components/compare/v3.6.6...v3.6.7) (2026-08-26)
+
+
+### Bug Fixes
+
+* **pb-view:** improve static option to work with opm ([f424855](https://github.com/eeditiones/tei-publisher-components/commit/f424855ab2a924a5492d2acb567fcf87f8289b9d))
+
 ## [3.6.6](https://github.com/eeditiones/tei-publisher-components/compare/v3.6.5...v3.6.6) (2026-07-19)
 
 
