@@ -211,8 +211,17 @@ export class PbAuthorityLookup extends themableMixin(pbMixin(LitElement)) {
    * "GND", "GeoNames" - shown so a federated lookup, i.e. Custom wrapping several nested
    * connectors, see custom.js, doesn't present merged results as if they all came from one
    * place).
+   *
+   * `item.label` is rendered as raw HTML via unsafeHTML() *only* when a connector
+   * explicitly opts in via `item.labelIsHtml` (today, only KBGA's bibl/songs registers,
+   * whose remote API returns a real, pre-formatted "asHtml" field - see kbga.js). Every
+   * other connector's label is plain text and must stay auto-escaped: ReconciliationService
+   * and Custom in particular surface labels extracted straight from document content
+   * (persName etc.), which anyone with document-edit access can influence - rendering that
+   * unconditionally as HTML was a real, confirmed stored-XSS vector before this flag existed.
    */
   _formatItem(item) {
+    const label = item.labelIsHtml ? unsafeHTML(item.label) : item.label;
     return html`
       <li>
         <div>
@@ -229,8 +238,8 @@ export class PbAuthorityLookup extends themableMixin(pbMixin(LitElement)) {
             </svg>
           </button>
           ${item.link
-            ? html`<a target="_blank" href="${item.link}">${unsafeHTML(item.label)}</a>`
-            : html`${unsafeHTML(item.label)}`}
+            ? html`<a target="_blank" href="${item.link}">${label}</a>`
+            : html`${label}`}
           <div class="badges">
             ${item.occurrences > 0
               ? html`<span class="occurrences badge" part="occurrences">${item.occurrences}</span>`
